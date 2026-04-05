@@ -1,0 +1,394 @@
+{
+  "name": "AI Agent-chatbot-telegram-websearch-serp-googlesheet",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "*\"You are an expert Lead Generation Assistant.\n\nINSTRUCTION:\n\nUse the search tool to look up the business.\n\nIf the business seems fake (like on Mars) or you cannot find any valid data, DO NOT output JSON. Simply reply with the plain text: \"Data not found.\"\n\nIf you successfully find the data, your final response MUST be ONLY a raw JSON object starting with {.\n\nJSON FORMAT:\n{\n\"BusinessName\": \"...\",\n\"Owner\": \"...\",\n\"Address\": \"...\",\n\"ContactInfo\": \"...\"\n}\n\nSTRICT RULE: Never put JSON inside the tool name. Only output the JSON in your final response.\"*"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "fa946229-ae88-4803-98b5-8afa255e4dc4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "2fcd3ef4-30eb-4bec-a3e5-30ffaf974f6f",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "N9dL46qtTPGOIjpt",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "08b2fd65-3d14-4229-be5c-3deb70b65eba",
+      "name": "Telegram Trigger",
+      "webhookId": "5f6d7e33-ae03-4265-bb2e-c2f84fb419d4",
+      "credentials": {
+        "telegramApi": {
+          "id": "Q84NoD3ngPy7ib6J",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "✅ Lead successfully found and saved to Google Sheets!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -240
+      ],
+      "id": "70344c4b-3e22-446c-9c4f-d9470383cac8",
+      "name": "Send a text message",
+      "webhookId": "e968422a-e192-445d-828b-d44860d8b0fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "Q84NoD3ngPy7ib6J",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        576,
+        208
+      ],
+      "id": "f756b1e8-41c3-4f1b-980f-21ad3fd437d4",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        672,
+        304
+      ],
+      "id": "e68baf53-d28f-462c-a431-52fd077621db",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Re3IDMDNyjb4rRvWriwwjPMW3dhZt5us6Uwi4xyzBmA/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "BusinessName": "={{ JSON.parse($json.output).BusinessName || \"N/A\" }}",
+            "Owner": "={{ JSON.parse($json.output).Owner || \"N/A\" }}",
+            "Address": "={{ JSON.parse($json.output).Address || \"N/A\" }}",
+            "ContactInfo": "={{ JSON.parse($json.output).ContactInfo || \"N/A\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "BusinessName",
+              "displayName": "BusinessName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ContactInfo",
+              "displayName": "ContactInfo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        960,
+        -160
+      ],
+      "id": "b2450882-16e5-4224-ae78-6224bd802475",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "7aFIdNZopZdEyPyI",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        768,
+        400
+      ],
+      "id": "396ea58d-f580-42a8-8274-344e564187d3",
+      "name": "search",
+      "credentials": {
+        "serpApi": {
+          "id": "lzxfMX7lduxMqn1a",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f03713fd-e586-4afb-b201-c7660bf6a07e",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "={",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        -16
+      ],
+      "id": "bddabb0a-8d6c-42ea-a330-207d6731315d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "1471872796",
+        "text": "⚠️ Sorry, I couldn't find any valid information for this lead.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        80
+      ],
+      "id": "ee4fbf4a-e007-4339-9d6b-e01494164e9a",
+      "name": "Send a text message1",
+      "webhookId": "db11235f-2103-4aea-87b6-696b6bd0b92d",
+      "credentials": {
+        "telegramApi": {
+          "id": "Q84NoD3ngPy7ib6J",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2f6b4d3e-e6bc-4ec1-9929-ace1d4626036",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7118959e1ad18fc85a3dafbee478e12e6dd7dc52dc2b23d0535b7764f79c7994"
+  },
+  "id": "dG0d0ZdZ0anQT8iE",
+  "tags": []
+}
